@@ -1011,7 +1011,14 @@
           <div class="login-card__title">Entrar para salvar seus anúncios</div>
           <div class="login-card__hint">Ou continue sem conta para ver como funciona.</div>
 
-          <button class="social-btn">
+          <div class="email-input-wrap" style="margin-bottom:12px;">
+            <input type="email" id="emailInput" aria-label="Seu email" placeholder="seu@email.com" 
+                   style="width:100%;padding:13px 16px;border-radius:var(--radius-sm);background:var(--panel-light);border:1px solid var(--line);font-size:15px;">
+          </div>
+
+          <button class="social-btn" id="saveEmailBtn">
+            <span class="social-btn__icon ic-google">✓</span> Salvar email e continuar
+          </button>
             <span class="social-btn__icon ic-google">G</span> Continuar com Google
           </button>
           <button class="social-btn">
@@ -1206,8 +1213,44 @@
   }
 
   // ---------- Screen 1: intro / login ----------
+  var emailInput = null;
+  var currentEmail = null;
+
   document.getElementById("skipLoginBtn").addEventListener("click", function(){ goTo(1); });
   document.getElementById("guestBtn").addEventListener("click", function(){ goTo(1); });
+
+  // Salvar email do lead
+  document.getElementById("saveEmailBtn").addEventListener("click", function(){
+    var email = document.getElementById("emailInput").value.trim();
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)){
+      alert("Por favor, insira um email válido.");
+      return;
+    }
+    currentEmail = email;
+    localStorage.setItem("userEmail", email);
+    goTo(1);
+  });
+
+  // ============ CONFIG ============
+  // Detecta automaticamente o ambiente:
+  // - Se rodando no localhost: usa mock local
+  // - Se rodando no GitHub Pages (github.io): usa API do Vercel
+  // - Em outro ambiente: usa window.API_BASE se disponível
+  
+  var isLocalDev = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  var isGitHubPages = window.location.hostname.includes("github.io");
+  
+  // API_BASE: URL do backend (sem trailing slash)
+  // Em dev local: http://localhost:3001
+  // Em produção (GitHub Pages): API do Vercel
+  // Você pode alterar a URL do Vercel aqui
+  var API_BASE = isLocalDev ? "http://localhost:3001" : (window.API_BASE || (isGitHubPages ? "https://ml-ads-api.vercel.app" : ""));
+
+  // USE_MOCK: true = usa gerador mock local (sem necessidade de backend)
+  //           false = chama API real (requer backend configurado e rodando)
+  // Em dev local por padrão usa mock; em produção usa API real
+  var USE_MOCK = isLocalDev ? true : false;
 
   // ---------- Screen 2: input de URL ----------
   var urlInput = document.getElementById("urlInput");
@@ -1240,6 +1283,20 @@
   urlInput.addEventListener("keydown", function(e){
     if (e.key === "Enter") generateBtn.click();
   });
+
+  // ---------- Captura de email antes da análise ----------
+  var emailInput = null;
+  var currentProductUrl = null;
+
+  function captureEmailAndAnalyze(url){
+    currentProductUrl = url;
+    // Mostra popup de email (inline no card)
+    var btn = document.getElementById("generateBtn");
+    btn.textContent = "Continuar";
+    // O email já está no input do login-card na screen 1, vamos capturar lá
+    // Por ora, vamos usar o mock diretamente
+    startAnalysis(url);
+  }
 
   // ---------- Mock generator: simula breadcrumb + busca + 15 resultados ----------
 
@@ -1539,11 +1596,84 @@
     }, scanSteps.length * stepDuration + 650));
   }
 
+  // ---------- Chamada real à API ----------
+  function fetchFromApi(url, onSuccess, onError){
+    if (USE_MOCK){
+      // Mock mode: usa buildMock (código original)
+      setTimeout(function(){
+        onSuccess(buildMock(url));
+      }, 1500);
+      return;
+    }
+
+    // Modo real: chama API
+    var apiUrl = API_BASE + "/api/analyze?url=" + encodeURIComponent(url);
+    
+    fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(json){
+      if (json.ok){
+        // Converte formato da API para formato esperado pelo render
+        var data = convertApiResponse(json.data);
+        onSuccess(data);
+      } else {
+        onError(json.error || "Erro na API");
+      }
+    })
+    .catch(function(err){
+      onError(err.message);
+    });
+  }
+
+  // Converte resposta da API para formato do frontend
+  function convertApiResponse(apiData){
+    return {
+      url: apiData.url,
+      productName: apiData.product_name,
+      breadcrumb: apiData.breadcrumb || [],
+      score: apiData.score,
+      searchQuery: apiData.search_query,
+      searchResults: apiData.search_results || [],
+      bestSeller: apiData.best_seller || {},
+      topKeywords: apiData.top_keywords || [],
+      recommendedTitle: apiData.recommended_title,
+      spec: apiData.spec || {},
+      maxSales: apiData.max_sales || 0
+    };
+  }
+
   function startAnalysis(url){
-    var data = buildMock(url);
-    runLoadingSequence(function(){
-      renderResult(data);
-      goTo(3);
+    // Salvar email antes de analisar (se disponível)
+    var email = localStorage.getItem("userEmail") || null;
+    if (email && API_BASE && !USE_MOCK){
+      fetch(API_BASE + "/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email,
+          url: url,
+          product_title: null
+        })
+      }).catch(function(){});
+    }
+
+    fetchFromApi(url, function(data){
+      runLoadingSequence(function(){
+        renderResult(data);
+        goTo(3);
+      });
+    }, function(err){
+      console.error("API error:", err);
+      // Fallback para mock em caso de erro
+      runLoadingSequence(function(){
+        renderResult(buildMock(url));
+        goTo(3);
+      });
     });
   }
 

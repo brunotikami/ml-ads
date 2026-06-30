@@ -1,8 +1,10 @@
 {
+  "name": "ml-ads-api",
   "version": 2,
-  "outputDirectory": ".",
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/ml.py" }
+  "builds": [
+    { "src": "api/server.js", "use": "@vercel/node" }
   ],
-  "framework": null
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/server.js" }
+  ]
 }
