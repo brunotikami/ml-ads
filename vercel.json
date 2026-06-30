@@ -1,7 +1,9 @@
 {
-  "buildCommand": null,
-  "devCommand": null,
-  "installCommand": "echo 'No install needed'",
-  "framework": null,
-  "outputDirectory": "."
+  "version": 2,
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": "public",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/ml.py" }
+  ],
+  "framework": null
 }
