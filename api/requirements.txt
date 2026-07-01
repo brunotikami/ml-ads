@@ -1,0 +1,2 @@
+# ML Ads API - Dependencies
+# Sem dependências externas - usa apenas bibliotecas padrão
