@@ -1245,12 +1245,12 @@
   // Em dev local: http://localhost:3001
   // Em produção (GitHub Pages): API do Vercel
   // Você pode alterar a URL do Vercel aqui
-  var API_BASE = isLocalDev ? "http://localhost:3001" : (window.API_BASE || (isGitHubPages ? "https://ml-ads-api.vercel.app" : ""));
+  var API_BASE = isLocalDev ? "http://localhost:3001" : (window.API_BASE || (isGitHubPages ? "https://ml-ads.vercel.app" : ""));
 
-  // USE_MOCK: true = usa gerador mock local (sem necessidade de backend)
-  //           false = chama API real (requer backend configurado e rodando)
-  // Em dev local por padrão usa mock; em produção usa API real
-  var USE_MOCK = isLocalDev ? true : false;
+  // Em produção: usa API real do Vercel (não mock)
+// USE_MOCK: true = usa gerador mock local (sem necessidade de backend)
+//           false = chama API real (requer backend configurado e rodando)
+var USE_MOCK = isLocalDev ? true : false;
 
   // ---------- Screen 2: input de URL ----------
   var urlInput = document.getElementById("urlInput");
