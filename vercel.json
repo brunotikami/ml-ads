@@ -1,6 +1,4 @@
 {
-  "name": "ml-ads-api",
-  "version": 2,
   "builds": [
     { "src": "api/main.py", "use": "@vercel/python" }
   ],
