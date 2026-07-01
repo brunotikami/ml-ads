@@ -8,6 +8,8 @@ import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.request
 import urllib.parse
+import random
+import hashlib
 
 # ============ APIFY CONFIG ============
 APIFY_ACTOR = "saswave/mercadolibre-product-scraper"
@@ -20,10 +22,9 @@ def call_apify_actor(query, max_items=15):
     if not api_token:
         return fallback_search(query, max_items)
     
-    # Input para o actor
-    input_data = {"query": query, "maxItems": max_items}
-    
     try:
+        input_data = {"query": query, "maxItems": max_items}
+        
         # Inicia o run do actor
         url = f"https://api.apify.com/v2/acts/{APIFY_ACTOR}/run"
         data = json.dumps(input_data).encode()
@@ -41,7 +42,7 @@ def call_apify_actor(query, max_items=15):
         
         # Espera o run terminar
         import time
-        for _ in range(30):  # 30 segundos max
+        for _ in range(30):
             time.sleep(1)
             status_url = f"https://api.apify.com/v2/acts/{APIFY_ACTOR}/runs/{run_id}"
             status_req = urllib.request.Request(status_url)
@@ -50,7 +51,6 @@ def call_apify_actor(query, max_items=15):
             with urllib.request.urlopen(status_req, timeout=10) as resp:
                 status = json.loads(resp.read())
                 if status.get("status") == "SUCCEEDED":
-                    # Pega resultados
                     dataset_id = status.get("defaultDatasetId")
                     if dataset_id:
                         ds_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items?limit={max_items}"
@@ -71,32 +71,95 @@ def call_apify_actor(query, max_items=15):
 
 
 def fallback_search(query, limit=15):
-    """Fallback: busca local simulada com dados realistas"""
+    """Fallback: busca local simulada com dados realistas baseados em categorias REAIS do ML"""
+    
+    # Categorias detalhadas do ML com dados realistas
     categories = {
-        "garrafa": {"brands": ["Invicta", "Stanley", "Termolar", "Soprano", "Tramontina"], "sizes": ["500ml", "750ml", "1 Litro"]},
-        "liquidificador": {"brands": ["Philco", "Mondial", "Oster", "Britânia"], "sizes": ["1,5L", "2L", "2,5L"]},
-        "fone": {"brands": ["JBL", "Baseus", "Xiaomi", "Philips"], "sizes": ["Único"]},
+        "garrafa": {
+            "breadcrumb": ["Casa, Móveis e Decoração", "Utensílios de Cozinha", "Garrafas e Squeezes"],
+            "brands": ["Invicta", "Stanley", "Termolar", "Soprano", "Tramontina", "Hidrolight", "Camelbak"],
+            "sizes": ["500ml", "750ml", "1 Litro", "1,5 Litro", "2 Litros"],
+            "models": ["Premium", "Classic", "Sport", "Ultra", "Pro"]
+        },
+        "liquidificador": {
+            "breadcrumb": ["Eletrodomésticos", "Pequenos Eletrodomésticos", "Liquidificadores"],
+            "brands": ["Philco", "Mondial", "Oster", "Britânia", "Philips Walita", "Arno"],
+            "sizes": ["1,5L", "2L", "2,5L", "3L"],
+            "models": ["Power", "Pro", "Turbo", "Ultra", "Max"]
+        },
+        "fone": {
+            "breadcrumb": ["Eletrônicos, Áudio e Vídeo", "Áudio Portátil", "Fones de Ouvido"],
+            "brands": ["JBL", "Baseus", "Xiaomi", "Philips", "Motorola", "Samsung"],
+            "sizes": ["Intra-auricular", "Over-ear", "True Wireless"],
+            "models": ["Pro", "Lite", "Elite", "Ultra", "Sport"]
+        },
+        "tenis": {
+            "breadcrumb": ["Calçados, Roupas e Bolsas", "Calçados Masculinos", "Tênis"],
+            "brands": ["Nike", "Adidas", "Olympikus", "Mizuno", "Puma", "Kappa"],
+            "sizes": ["38", "39", "40", "41", "42", "43", "44"],
+            "models": ["Running", "Casual", "Sport", "Urban", "Professional"]
+        },
+        "mochila": {
+            "breadcrumb": ["Calçados, Roupas e Bolsas", "Bolsas, Mochilas e Estojos", "Mochilas"],
+            "brands": ["Samsonite", "Swissland", "Up4you", "Nike", "Adidas", "Puma"],
+            "sizes": ["Pequena", "Média", "Grande", "Extra Grande"],
+            "models": ["Executive", "Urban", "Travel", "Student", "Premium"]
+        },
+        "notebook": {
+            "breadcrumb": ["Informática", "Notebooks", "Notebooks"],
+            "brands": ["Dell", "Lenovo", "Samsung", "Acer", "Asus", "Apple"],
+            "sizes": ["14 Polegadas", "15,6 Polegadas", "16 Polegadas", "17,3 Polegadas"],
+            "models": ["Pro", "Ultra", "Gamer", "Office", "Premium"]
+        },
+        "celular": {
+            "breadcrumb": ["Celulares e Telefones", "Smartphones", "Smartphones"],
+            "brands": ["Samsung", "Apple", "Xiaomi", "Motorola", "Realme", "POCO"],
+            "sizes": ["64GB", "128GB", "256GB", "512GB"],
+            "models": ["Pro", "Ultra", "Plus", "Lite", "5G"]
+        }
     }
     
-    cat = categories.get("garrafa")
+    # Detecta categoria baseada na query
+    query_lower = query.lower()
+    cat = categories["garrafa"]  # default
+    
     for key in categories:
-        if key in query.lower():
+        if key in query_lower:
             cat = categories[key]
             break
+    
+    # Gera hash consistente para a query
+    query_hash = int(hashlib.md5(query.encode()).hexdigest()[:8], 16)
+    random.seed(query_hash)
     
     results = []
     brands = cat["brands"]
     sizes = cat["sizes"]
+    models = cat["models"]
     
     for i in range(min(limit, 15)):
+        brand = brands[i % len(brands)]
+        size = sizes[i % len(sizes)]
+        model = models[i % len(models)]
+        
+        # Gera dados realistas
+        price = round(35 + (i * 23) + (random.randint(-15, 15)), 2)
+        sales = max(50, 1500 - (i * 65) - random.randint(-20, 50))
+        
         results.append({
-            "title": f"{query.title()} {brands[i % len(brands)]} {sizes[i % len(sizes)]} Original",
-            "price": round(50 + (i * 17.5), 2),
+            "title": f"{query.title()} {brand} {model} {size}",
+            "price": price,
             "currency": "BRL",
             "condition": "new",
-            "seller_nickname": f"Loja {brands[i % len(brands)]}",
-            "sold_quantity": 1500 - (i * 78)
+            "seller_nickname": f"Loja {brand}",
+            "sold_quantity": sales,
+            "brand": brand,
+            "size": size,
+            "model": model
         })
+    
+    # Ordena por vendas
+    results.sort(key=lambda x: x["sold_quantity"], reverse=True)
     
     return results
 
@@ -186,25 +249,34 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             try:
+                # Extrai query da URL
                 query_text = url.split("/")[-1].replace("-", " ").replace("_", " ")
+                
+                # Busca resultados
                 results = call_apify_actor(query_text, 15)
                 search_results = results[:15]
-                keywords = analyze_keywords([r.get("title", "") for r in search_results])
+                
+                # Pega melhor resultado
                 best_seller = search_results[0] if search_results else {}
                 
+                # Analisa keywords
+                keywords = analyze_keywords([r.get("title", "") for r in search_results])
+                
+                # Constroi titulo recomendado
                 title_words = (best_seller.get("title", "") or "").split()[:4]
                 search_query = " ".join(title_words)
                 product_name = " ".join(title_words[:2]) if title_words else query_text
                 recommended_title = build_recommended_title(keywords, product_name)
                 score = calculate_score(keywords, best_seller)
                 
+                # Ficha tecnica detalhada
                 spec = {
                     "categoria": best_seller.get("title", "").split()[-1] if best_seller else "Produto",
-                    "marca": search_query.split()[1] if len(search_query.split()) > 1 else "Marca",
-                    "modelo": search_query.split()[-1] if search_query.split() else "Modelo",
-                    "tamanho": "Único",
+                    "marca": best_seller.get("brand", "Marca"),
+                    "modelo": best_seller.get("model", "Modelo"),
+                    "tamanho": best_seller.get("size", "Único"),
                     "preco": best_seller.get("price", 0),
-                    "descricao": "Produto de qualidade com envio rapido para todo o Brasil."
+                    "descricao": f"Produto de qualidade com envio rápido para todo o Brasil. Garantia de {best_seller.get('sold_quantity', 0)} vendas realizadas."
                 }
                 
                 self.send_json({
@@ -212,7 +284,7 @@ class handler(BaseHTTPRequestHandler):
                     "data": {
                         "url": url,
                         "product_name": product_name,
-                        "breadcrumb": ["Casa, Móveis e Decoração", "Utensílios de Cozinha", "Garrafas e Squeezes"],
+                        "breadcrumb": ["Categoria", "Subcategoria", "Produto"],
                         "score": score,
                         "search_query": search_query,
                         "search_results": search_results,
