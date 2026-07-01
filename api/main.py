@@ -249,8 +249,22 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             try:
-                # Extrai query da URL
-                query_text = url.split("/")[-1].replace("-", " ").replace("_", " ")
+                # Extrai query da URL - pega o slug textual, não o ID
+                url_clean = url.replace("https://", "").replace("http://", "")
+                parts = url_clean.split("/")
+                # Procura a parte que tem o nome do produto (não o ID)
+                query_text = ""
+                for p in parts:
+                    # Pega só texto, ignora IDs como MLB...
+                    if p and not p.upper().startswith("MLB") and not p.isdigit():
+                        query_text = p.replace("-", " ").replace("_", " ")
+                        break
+                if not query_text:
+                    # Fallback: pega última parte da URL
+                    query_text = parts[-1].replace("-", " ").replace("_", " ") if parts else query
+                
+                # Limpa query
+                query_text = " ".join(query_text.split())[:50]  #limpa espaços
                 
                 # Busca resultados
                 results = call_apify_actor(query_text, 15)
