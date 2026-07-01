@@ -261,17 +261,20 @@ class handler(BaseHTTPRequestHandler):
                 # Procura o slug do produto (geralmente entre / e /p/ ou no final)
                 query_text = ""
                 for p in parts:
-                    # Ignora IDs como MLB123456789
-                    if re.match(r'^[A-Z]{2,3}\d+$', p.upper()):
+                    # Ignora IDs como MLB123456 - verifica padrão exato (não substring)
+                    if re.fullmatch(r'[A-Z]{2,}\d+', p.upper()):
                         continue
-                    if p.lower() in ['p', 'item', 'search']:
+                    if p.lower() in ['p', 'item', 'search', 'www', 'com', 'br']:
                         continue
                     query_text = p.replace("-", " ").replace("_", " ")
                     break
                 
-                # Se não achou, pega o último
-                if not query_text and parts:
-                    query_text = parts[-1].replace("-", " ").replace("_", " ")
+                # Se não achou, pega o último que não seja domínio
+                if not query_text:
+                    for p in reversed(parts):
+                        if p.lower() not in ['www', 'com', 'br', 'https', 'http', 'p', 'item', 'search']:
+                            query_text = p.replace("-", " ").replace("_", " ")
+                            break
                 
                 # Limpa
                 query_text = " ".join(query_text.split())[:50]  #limpa espaços
