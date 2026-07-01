@@ -249,21 +249,31 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             try:
-                # Extrai query da URL - pega o slug textual, não o ID
-                url_clean = url.replace("https://", "").replace("http://", "")
-                parts = url_clean.split("/")
-                # Procura a parte que tem o nome do produto (não o ID)
+                # Extrai query da URL - pega o slug textual do produto
+                # Ex: https://www.mercadolivre.com.br/garrafa-termica-inox/p/MLB123456 -> "garrafa termica"
+                from urllib.parse import urlparse
+                parsed = urlparse(url)
+                path = parsed.path
+                
+                # Pega partes do path
+                parts = [p for p in path.split("/") if p]
+                
+                # Procura o slug do produto (geralmente entre / e /p/ ou no final)
                 query_text = ""
                 for p in parts:
-                    # Pega só texto, ignora IDs como MLB...
-                    if p and not p.upper().startswith("MLB") and not p.isdigit():
-                        query_text = p.replace("-", " ").replace("_", " ")
-                        break
-                if not query_text:
-                    # Fallback: pega última parte da URL
-                    query_text = parts[-1].replace("-", " ").replace("_", " ") if parts else query
+                    # Ignora IDs como MLB123456789
+                    if re.match(r'^[A-Z]{2,3}\d+$', p.upper()):
+                        continue
+                    if p.lower() in ['p', 'item', 'search']:
+                        continue
+                    query_text = p.replace("-", " ").replace("_", " ")
+                    break
                 
-                # Limpa query
+                # Se não achou, pega o último
+                if not query_text and parts:
+                    query_text = parts[-1].replace("-", " ").replace("_", " ")
+                
+                # Limpa
                 query_text = " ".join(query_text.split())[:50]  #limpa espaços
                 
                 # Busca resultados
