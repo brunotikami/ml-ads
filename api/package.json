@@ -1,0 +1,13 @@
+{
+  "name": "ml-ads-api",
+  "version": "1.0.0",
+  "description": "API para scraping simulado do Mercado Livre e captura de leads (sem dependências externas)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

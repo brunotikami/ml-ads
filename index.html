@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anúncio Pro — Gerador de anúncios de alta performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1F3A;
+    --bg-deep:#071529;
+    --panel:#11294D;
+    --panel-light:#16335E;
+    --line:rgba(255,255,255,0.09);
+    --yellow:#FFE600;
+    --yellow-deep:#E6CE00;
+    --green:#00A650;
+    --green-soft:rgba(0,166,80,0.16);
+    --red:#FF4D4F;
+    --text:#F5F7FA;
+    --text-dim:#9FB0C9;
+    --text-faint:#6E80A0;
+    --white:#FFFFFF;
+    --radius:18px;
+    --radius-sm:10px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background:var(--bg-deep);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  body{min-height:100vh;}
+
+  ::selection{background:var(--yellow); color:#1A2433;}
+  a{color:inherit;}
+
+  button{
+    font-family:var(--font-body);
+    cursor:pointer;
+    border:none;
+    background:none;
+    color:inherit;
+  }
+  button:focus-visible, input:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--yellow);
+    outline-offset:3px;
+  }
+
+  input{
+    font-family:var(--font-body);
+    color:var(--text);
+    background:transparent;
+    border:none;
+  }
+  input::placeholder{color:var(--text-faint);}
+
+  /* ---------- App shell / screen switching ---------- */
+  .app{
+    position:relative;
+    width:100%;
+    min-height:100vh;
+  }
+  .screen{
+    display:none;
+    min-height:100vh;
+    width:100%;
+    animation:fadeIn .45s ease both;
+  }
+  .screen.active{display:block;}
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(8px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .screen{animation:none;}
+    *{transition:none !important; animation-duration:.01ms !important;}
+  }
+
+  .progress-rail{
+    position:fixed;
+    top:0; left:0; right:0;
+    height:3px;
+    background:rgba(255,255,255,0.06);
+    z-index:50;
+  }
+  .progress-rail__fill{
+    height:100%;
+    background:var(--yellow);
+    width:0%;
+    transition:width .5s ease;
+  }
+
+  .container{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  /* ================= SCREEN 1 — Intro / Login ================= */
+  #screen-intro{
+    background:
+      radial-gradient(ellipse 900px 600px at 75% 15%, rgba(255,230,0,0.10), transparent 60%),
+      linear-gradient(160deg, #0e2747 0%, #0B1F3A 50%, #071529 100%);
+    min-height:100vh;
+    position:relative;
+    overflow:hidden;
+  }
+  .screen.active#screen-intro{
+    display:flex;
+    flex-direction:column;
+  }
+  #screen-intro .intro-bg-photo{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  #screen-intro .intro-bg-veil{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(7,21,41,0.30) 0%, rgba(7,21,41,0.55) 45%, rgba(7,21,41,0.97) 100%);
+  }
+  #screen-intro .intro-top,
+  #screen-intro .intro-body,
+  #screen-intro .intro-foot{
+    position:relative;
+    z-index:2;
+  }
+  .intro-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:28px 32px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:19px;
+    letter-spacing:-0.01em;
+  }
+  .brand__mark{
+    width:30px; height:30px;
+    border-radius:8px;
+    background:var(--yellow);
+    display:flex; align-items:center; justify-content:center;
+    color:#1A2433;
+    font-size:16px;
+  }
+  .skip-link{
+    font-size:14px;
+    color:var(--text-dim);
+    text-decoration:underline;
+    text-decoration-color:rgba(255,255,255,0.25);
+    text-underline-offset:3px;
+  }
+  .skip-link:hover{color:var(--white);}
+
+  .intro-body{
+    flex:1;
+    display:flex;
+    align-items:flex-end;
+    padding-bottom:56px;
+  }
+  .intro-grid{
+    width:100%;
+    display:grid;
+    grid-template-columns:1.2fr 0.9fr;
+    gap:48px;
+    align-items:end;
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--yellow);
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--yellow);
+    box-shadow:0 0 0 4px rgba(255,230,0,0.18);
+  }
+  .intro-headline{
+    font-family:var(--font-display);
+    font-size:clamp(34px, 5vw, 58px);
+    font-weight:700;
+    line-height:1.04;
+    letter-spacing:-0.02em;
+    max-width:620px;
+  }
+  .intro-headline em{
+    font-style:normal;
+    color:var(--yellow);
+  }
+  .intro-sub{
+    margin-top:18px;
+    font-size:17px;
+    line-height:1.6;
+    color:var(--text-dim);
+    max-width:480px;
+  }
+
+  .login-card{
+    background:rgba(11,31,58,0.78);
+    border:1px solid var(--line);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-radius:var(--radius);
+    padding:30px;
+  }
+  .login-card__title{
+    font-family:var(--font-display);
+    font-size:20px;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .login-card__hint{
+    font-size:14px;
+    color:var(--text-dim);
+    margin-bottom:22px;
+  }
+  .social-btn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:13px 16px;
+    border-radius:var(--radius-sm);
+    background:var(--panel-light);
+    border:1px solid var(--line);
+    font-size:15px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:10px;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .social-btn:hover{background:#1c3e6e; transform:translateY(-1px);}
+  .social-btn__icon{
+    width:20px; height:20px;
+    flex-shrink:0;
+    border-radius:5px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px;
+    font-weight:800;
+  }
+  .ic-google{background:#fff; color:#444;}
+  .ic-fb{background:#1877F2; color:#fff;}
+  .ic-apple{background:#fff; color:#000;}
+
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:18px 0;
+    color:var(--text-faint);
+    font-size:12.5px;
+  }
+  .divider::before, .divider::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .btn-guest{
+    width:100%;
+    text-align:center;
+    padding:13px 16px;
+    border-radius:var(--radius-sm);
+    border:1px dashed rgba(255,255,255,0.22);
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--text-dim);
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .btn-guest:hover{border-color:var(--yellow); color:var(--yellow);}
+
+  .intro-foot{
+    padding:20px 32px 28px;
+    font-size:12.5px;
+    color:var(--text-faint);
+    text-align:center;
+  }
+
+  @media (max-width:880px){
+    .intro-grid{grid-template-columns:1fr; gap:32px;}
+    .intro-body{align-items:flex-end; padding-bottom:32px;}
+    .intro-headline{font-size:clamp(28px,7vw,40px);}
+  }
+  @media (max-width:560px){
+    .intro-top{padding:20px;}
+    .container, .intro-grid{padding-left:0;}
+  }
+
+  /* ================= SCREEN 2 — Input de URL ================= */
+  #screen-input{
+    background:var(--bg-deep);
+    min-height:100vh;
+  }
+  .screen.active#screen-input{
+    display:flex;
+    flex-direction:column;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-step{
+    font-size:13px;
+    color:var(--text-dim);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .topbar-step b{color:var(--text); font-weight:600;}
+
+  .input-stage{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:60px 0;
+  }
+  .input-card{
+    width:100%;
+    max-width:640px;
+    text-align:center;
+  }
+  .input-card__eyebrow{
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:14px;
+  }
+  .input-card h1{
+    font-family:var(--font-display);
+    font-size:clamp(28px,4vw,38px);
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin-bottom:14px;
+  }
+  .input-card p{
+    color:var(--text-dim);
+    font-size:15.5px;
+    line-height:1.6;
+    max-width:480px;
+    margin:0 auto 36px;
+  }
+
+  .url-box{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--panel);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:6px 6px 6px 18px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .url-box:focus-within{
+    border-color:var(--yellow);
+    box-shadow:0 0 0 4px rgba(255,230,0,0.12);
+  }
+  .url-box__icon{color:var(--text-faint); font-size:15px; flex-shrink:0;}
+  .url-box input{
+    flex:1;
+    font-size:15.5px;
+    padding:14px 0;
+    min-width:0;
+  }
+  .btn-primary{
+    background:var(--yellow);
+    color:#1A2433;
+    font-weight:700;
+    font-size:15px;
+    padding:14px 24px;
+    border-radius:10px;
+    white-space:nowrap;
+    transition:background .15s ease, transform .15s ease;
+    flex-shrink:0;
+  }
+  .btn-primary:hover{background:var(--yellow-deep); transform:translateY(-1px);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-primary:disabled{opacity:.5; cursor:not-allowed; transform:none;}
+
+  .url-error{
+    margin-top:10px;
+    font-size:13.5px;
+    color:var(--red);
+    text-align:left;
+    display:none;
+    padding-left:4px;
+  }
+  .url-error.show{display:block;}
+
+  .input-example{
+    margin-top:18px;
+    font-size:13px;
+    color:var(--text-faint);
+  }
+  .input-example button{
+    color:var(--yellow);
+    text-decoration:underline;
+    text-decoration-color:rgba(255,230,0,0.35);
+    text-underline-offset:3px;
+    font-size:13px;
+    font-weight:600;
+  }
+
+  .rule-strip{
+    display:flex;
+    justify-content:center;
+    gap:36px;
+    padding:26px 0 50px;
+    flex-wrap:wrap;
+  }
+  .rule-item{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:13.5px;
+    color:var(--text-dim);
+  }
+  .rule-item__dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--green);
+    flex-shrink:0;
+  }
+
+  @media (max-width:560px){
+    .url-box{flex-wrap:wrap; padding:14px;}
+    .url-box input{padding:8px 0; order:2; width:100%;}
+    .url-box__icon{order:1;}
+    .btn-primary{order:3; width:100%; text-align:center;}
+    .rule-strip{gap:18px 26px;}
+  }
+
+  /* ================= SCREEN 3 — Loading / análise (radar) ================= */
+  #screen-loading{
+    background:var(--bg-deep);
+    min-height:100vh;
+    padding:40px 0;
+  }
+  .screen.active#screen-loading{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .loading-wrap{
+    width:100%;
+    max-width:760px;
+    text-align:center;
+  }
+  .radar{
+    position:relative;
+    width:220px;
+    height:220px;
+    margin:0 auto 38px;
+  }
+  .radar__ring{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:1.5px solid rgba(255,230,0,0.18);
+  }
+  .radar__ring:nth-child(2){inset:24px; border-color:rgba(255,230,0,0.14);}
+  .radar__ring:nth-child(3){inset:48px; border-color:rgba(255,230,0,0.22);}
+  .radar__core{
+    position:absolute;
+    inset:78px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #FFF1A8, var(--yellow) 60%, var(--yellow-deep));
+    box-shadow:0 0 40px rgba(255,230,0,0.45);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display);
+    font-weight:700;
+    color:#1A2433;
+    font-size:13px;
+  }
+  .radar__sweep{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(255,230,0,0.55), transparent 35%);
+    animation:spin 2.1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){
+    .radar__sweep{animation:none; opacity:.3;}
+  }
+
+  .loading-wrap h2{
+    font-family:var(--font-display);
+    font-size:clamp(22px,3.4vw,28px);
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .loading-wrap > p{
+    color:var(--text-dim);
+    font-size:15px;
+    margin-bottom:34px;
+  }
+
+  .scan-list{
+    max-width:480px;
+    margin:0 auto;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .scan-step{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-size:14.5px;
+    color:var(--text-faint);
+    opacity:0.45;
+    transition:opacity .35s ease, color .35s ease;
+  }
+  .scan-step.active{color:var(--text); opacity:1;}
+  .scan-step.done{color:var(--text-dim); opacity:0.85;}
+  .scan-step__mark{
+    width:22px; height:22px;
+    border-radius:50%;
+    border:1.5px solid var(--text-faint);
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px;
+  }
+  .scan-step.active .scan-step__mark{
+    border-color:var(--yellow);
+  }
+  .scan-step.done .scan-step__mark{
+    border-color:var(--green);
+    background:var(--green);
+    color:#fff;
+  }
+  .scan-step.active .scan-step__mark::after{
+    content:'';
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--yellow);
+    animation:pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+
+  .scan-bar-track{
+    margin-top:36px;
+    height:6px;
+    border-radius:6px;
+    background:rgba(255,255,255,0.07);
+    overflow:hidden;
+    max-width:480px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .scan-bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--yellow-deep), var(--yellow));
+    border-radius:6px;
+    transition:width .4s ease;
+  }
+
+  /* ================= SCREEN 4 — Resultado ================= */
+  #screen-result{
+    background:var(--bg-deep);
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  .result-head{
+    padding:30px 0 26px;
+    border-bottom:1px solid var(--line);
+  }
+  .result-head__top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .result-eyebrow{
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--green);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .result-eyebrow::before{
+    content:'';
+    width:6px;height:6px;border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 0 4px var(--green-soft);
+  }
+  .result-head h1{
+    font-family:var(--font-display);
+    font-size:clamp(24px,3.4vw,32px);
+    font-weight:700;
+    letter-spacing:-0.01em;
+    max-width:600px;
+  }
+  .result-source{
+    margin-top:8px;
+    font-size:13.5px;
+    color:var(--text-faint);
+    word-break:break-all;
+  }
+  .score-pill{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 20px;
+    flex-shrink:0;
+  }
+  .score-pill__ring{
+    width:48px; height:48px;
+    border-radius:50%;
+    background:conic-gradient(var(--green) calc(var(--score,87)*1%), rgba(255,255,255,0.08) 0);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .score-pill__ring::after{
+    content:'';
+    width:36px;height:36px;
+    border-radius:50%;
+    background:var(--panel);
+  }
+  .score-pill__num{
+    position:absolute;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:13px;
+  }
+  .score-pill__text{display:flex; flex-direction:column;}
+  .score-pill__label{font-size:11.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em;}
+  .score-pill__value{font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--green);}
+
+  .result-grid{
+    display:grid;
+    grid-template-columns:1.5fr 1fr;
+    gap:24px;
+    margin-top:32px;
+    align-items:start;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px;
+  }
+  .panel + .panel{margin-top:20px;}
+  .panel__title{
+    font-family:var(--font-display);
+    font-size:16px;
+    font-weight:600;
+    margin-bottom:18px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .panel__title .tag{
+    font-size:11px;
+    font-weight:700;
+    background:var(--green-soft);
+    color:var(--green);
+    padding:3px 9px;
+    border-radius:6px;
+    letter-spacing:.02em;
+  }
+
+  .field-row{
+    margin-bottom:18px;
+  }
+  .field-row:last-child{margin-bottom:0;}
+  .field-row__label{
+    font-size:12px;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:7px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .field-row__copy{
+    font-size:11px;
+    color:var(--yellow);
+    text-transform:none;
+    letter-spacing:0;
+    font-weight:600;
+  }
+  .field-row__value{
+    font-size:15px;
+    line-height:1.55;
+    color:var(--text);
+    background:var(--bg-deep);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .field-row__value.title-value{font-weight:600; font-size:15.5px;}
+
+  .kw-cloud{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .kw-chip{
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:20px;
+    background:rgba(255,230,0,0.1);
+    color:var(--yellow);
+    border:1px solid rgba(255,230,0,0.25);
+    font-weight:600;
+  }
+  .kw-chip.secondary{
+    background:rgba(255,255,255,0.05);
+    color:var(--text-dim);
+    border-color:var(--line);
+    font-weight:500;
+  }
+
+  .spec-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:14px 16px;
+  }
+  .spec-item{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    background:var(--bg-deep);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .spec-item__label{
+    font-size:11.5px;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .spec-item__value{
+    font-size:15px;
+    font-weight:600;
+    color:var(--text);
+  }
+  @media (max-width:480px){
+    .spec-grid{grid-template-columns:1fr;}
+  }
+
+  .best-seller-block{
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+  }
+  .best-seller-block__img{
+    width:120px;
+    height:120px;
+    flex-shrink:0;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .best-seller-block__img svg{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .best-seller-block__caption{
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--text-dim);
+    min-width:0;
+    flex:1;
+  }
+  .best-seller-block__caption strong{
+    color:var(--text);
+  }
+  @media (max-width:480px){
+    .best-seller-block{flex-direction:column;}
+    .best-seller-block__img{width:100px; height:100px;}
+  }
+
+  .checklist{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .checklist li{
+    list-style:none;
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    font-size:13.5px;
+    color:var(--text-dim);
+    line-height:1.5;
+  }
+  .checklist li::before{
+    content:'✓';
+    flex-shrink:0;
+    width:18px;height:18px;
+    border-radius:50%;
+    background:var(--green-soft);
+    color:var(--green);
+    font-size:11px;
+    font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+    margin-top:1px;
+  }
+
+  .rank-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .rank-row{
+    display:grid;
+    grid-template-columns:22px 1fr auto;
+    align-items:center;
+    gap:10px;
+    font-size:13px;
+  }
+  .rank-row.is-target{
+    background:rgba(255,230,0,0.07);
+    border:1px solid rgba(255,230,0,0.3);
+    border-radius:8px;
+    padding:6px 8px;
+    margin:2px -8px;
+  }
+  .rank-pos{
+    color:var(--text-faint);
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:12px;
+  }
+  .rank-row.is-target .rank-pos{color:var(--yellow);}
+  .rank-bar-track{
+    height:7px;
+    border-radius:4px;
+    background:rgba(255,255,255,0.06);
+    overflow:hidden;
+  }
+  .rank-bar-fill{
+    height:100%;
+    border-radius:4px;
+    background:var(--text-faint);
+  }
+  .rank-row.is-target .rank-bar-fill{background:var(--yellow);}
+  .rank-sales{
+    color:var(--text-faint);
+    font-size:11.5px;
+    white-space:nowrap;
+  }
+  .rank-row.is-target .rank-sales{color:var(--yellow);}
+
+  .result-actions{
+    display:flex;
+    gap:12px;
+    margin-top:28px;
+    flex-wrap:wrap;
+  }
+  .btn-secondary{
+    padding:13px 22px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--text);
+    transition:border-color .15s ease;
+  }
+  .btn-secondary:hover{border-color:rgba(255,255,255,0.3);}
+
+  @media (max-width:900px){
+    .result-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:560px){
+    .result-head__top{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-rail"><div class="progress-rail__fill" id="progressFill"></div></div>
+
+<div class="app">
+
+  <!-- ===================== SCREEN 1 — INTRO / LOGIN ===================== -->
+  <section class="screen active" id="screen-intro">
+    <svg class="intro-bg-photo" id="introBgIllustration" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="introSkyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#13325c"/>
+          <stop offset="100%" stop-color="#0B1F3A"/>
+        </linearGradient>
+        <linearGradient id="introBoxGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#C98A4B"/>
+          <stop offset="100%" stop-color="#9C6530"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="1200" height="800" fill="url(#introSkyGrad)"/>
+
+      <!-- floor -->
+      <rect x="0" y="640" width="1200" height="160" fill="#0A1A33"/>
+      <ellipse cx="780" cy="660" rx="420" ry="40" fill="#0E2447" opacity="0.7"/>
+
+      <!-- table -->
+      <rect x="520" y="560" width="560" height="22" rx="4" fill="#1C3E6E"/>
+      <rect x="555" y="582" width="18" height="80" fill="#162F56"/>
+      <rect x="1005" y="582" width="18" height="80" fill="#162F56"/>
+
+      <!-- stack of boxes left -->
+      <g opacity="0.9">
+        <rect x="120" y="500" width="140" height="120" rx="6" fill="url(#introBoxGrad)"/>
+        <rect x="120" y="500" width="140" height="120" rx="6" fill="#000" opacity="0.06"/>
+        <path d="M120 500 L260 500 L190 540 L120 540 Z" fill="#E0A464" opacity="0.5"/>
+        <rect x="183" y="500" width="14" height="120" fill="#7A4F22"/>
+        <rect x="200" y="430" width="120" height="80" rx="6" fill="url(#introBoxGrad)"/>
+        <rect x="253" y="430" width="14" height="80" fill="#7A4F22"/>
+      </g>
+
+      <!-- main box on table being sealed -->
+      <g>
+        <rect x="600" y="430" width="230" height="150" rx="8" fill="url(#introBoxGrad)"/>
+        <rect x="600" y="430" width="230" height="150" rx="8" fill="#000" opacity="0.05"/>
+        <rect x="707" y="430" width="16" height="150" fill="#7A4F22"/>
+        <path d="M600 430 L830 430 L790 405 L640 405 Z" fill="#D89A5C"/>
+        <path d="M600 430 L640 405 L640 470 L600 460 Z" fill="#B97B3E" opacity="0.6"/>
+        <!-- tape strip -->
+        <rect x="690" y="395" width="50" height="220" rx="3" fill="#FFE600" opacity="0.85"/>
+        <!-- shipping label -->
+        <rect x="630" y="455" width="90" height="60" rx="4" fill="#F5F7FA"/>
+        <rect x="640" y="465" width="60" height="6" rx="2" fill="#9FB0C9"/>
+        <rect x="640" y="478" width="70" height="6" rx="2" fill="#9FB0C9"/>
+        <rect x="640" y="491" width="45" height="6" rx="2" fill="#00A650"/>
+      </g>
+
+      <!-- entrepreneur figure (stylized, faceless silhouette) -->
+      <g>
+        <!-- hair -->
+        <path d="M905 280 Q900 230 950 220 Q1010 210 1025 260 Q1032 280 1020 300 L885 305 Q888 290 905 280 Z" fill="#2A1C12"/>
+        <!-- head -->
+        <ellipse cx="955" cy="270" rx="42" ry="46" fill="#C98A5E"/>
+        <!-- body / shirt -->
+        <path d="M880 360 Q885 320 955 312 Q1028 320 1032 360 L1045 520 L868 520 Z" fill="#FFE600"/>
+        <path d="M880 360 Q885 320 955 312 Q1028 320 1032 360 L1045 520 L868 520 Z" fill="#000" opacity="0.04"/>
+        <!-- arm reaching to box -->
+        <path d="M905 365 Q840 400 800 450 Q790 465 805 478 Q820 488 835 472 Q865 435 915 400 Z" fill="#FFE600"/>
+        <ellipse cx="800" cy="465" rx="20" ry="18" fill="#C98A5E"/>
+        <!-- other arm -->
+        <path d="M1005 365 Q1070 395 1095 445 Q1105 462 1090 474 Q1075 484 1062 468 Q1035 432 985 398 Z" fill="#FFE600"/>
+        <ellipse cx="1095" cy="460" rx="20" ry="18" fill="#C98A5E"/>
+        <!-- pants -->
+        <path d="M870 520 L1043 520 L1058 660 L995 660 L965 560 L935 660 L878 660 Z" fill="#16335E"/>
+      </g>
+
+      <!-- floating accent dots -->
+      <circle cx="260" cy="200" r="5" fill="#FFE600" opacity="0.5"/>
+      <circle cx="340" cy="260" r="3" fill="#FFE600" opacity="0.35"/>
+      <circle cx="1080" cy="180" r="4" fill="#FFE600" opacity="0.4"/>
+      <circle cx="1000" cy="140" r="6" fill="#00A650" opacity="0.3"/>
+    </svg>
+    <div class="intro-bg-veil"></div>
+
+    <div class="intro-top">
+      <div class="brand"><span class="brand__mark">A</span> Anúncio Pro</div>
+      <button class="skip-link" id="skipLoginBtn">Continuar sem login →</button>
+    </div>
+
+    <div class="container intro-body">
+      <div class="intro-grid">
+        <div>
+          <span class="eyebrow">Para vendedores do Mercado Livre</span>
+          <h1 class="intro-headline">Transforme qualquer anúncio em uma <em>versão de alta conversão</em>.</h1>
+          <p class="intro-sub">Cole o link de um anúncio do Mercado Livre. Identificamos a categoria pelo breadcrumb, buscamos pelas primeiras palavras do título e analisamos os 15 anúncios mais bem posicionados para gerar título, ficha técnica e descrição prontos para publicar.</p>
+        </div>
+
+        <div class="login-card">
+          <div class="login-card__title">Entrar para salvar seus anúncios</div>
+          <div class="login-card__hint">Ou continue sem conta para ver como funciona.</div>
+
+          <div class="email-input-wrap" style="margin-bottom:12px;">
+            <input type="email" id="emailInput" aria-label="Seu email" placeholder="seu@email.com" 
+                   style="width:100%;padding:13px 16px;border-radius:var(--radius-sm);background:var(--panel-light);border:1px solid var(--line);font-size:15px;">
+          </div>
+
+          <button class="social-btn" id="saveEmailBtn">
+            <span class="social-btn__icon ic-google">✓</span> Salvar email e continuar
+          </button>
+            <span class="social-btn__icon ic-google">G</span> Continuar com Google
+          </button>
+          <button class="social-btn">
+            <span class="social-btn__icon ic-fb">f</span> Continuar com Facebook
+          </button>
+          <button class="social-btn">
+            <span class="social-btn__icon ic-apple"></span> Continuar com Apple
+          </button>
+
+          <div class="divider">ou</div>
+
+          <button class="btn-guest" id="guestBtn">Ver exemplo sem criar conta</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro-foot">Nenhuma informação de pagamento é necessária para testar o fluxo de exemplo.</div>
+  </section>
+
+  <!-- ===================== SCREEN 2 — INPUT DE URL ===================== -->
+  <section class="screen" id="screen-input">
+    <div class="container">
+      <div class="topbar">
+        <div class="brand" style="font-size:16px;"><span class="brand__mark" style="width:24px;height:24px;font-size:13px;">A</span> Anúncio Pro</div>
+        <div class="topbar-step">Etapa <b>1</b> de 3 — Anúncio de origem</div>
+      </div>
+    </div>
+
+    <div class="container input-stage">
+      <div class="input-card">
+        <div class="input-card__eyebrow">Comece por aqui</div>
+        <h1>Cole o link do seu anúncio no Mercado Livre</h1>
+        <p>Identificamos a categoria pelo breadcrumb da página e buscamos no Mercado Livre pelas 4 primeiras palavras do seu título, para comparar com quem mais vende.</p>
+
+        <div class="url-box">
+          <span class="url-box__icon">🔗</span>
+          <input type="text" id="urlInput" aria-label="URL do anúncio no Mercado Livre" placeholder="https://www.mercadolivre.com.br/seu-produto/p/MLB..." autocomplete="off">
+          <button class="btn-primary" id="generateBtn">Gerar anúncio</button>
+        </div>
+        <div class="url-error" id="urlError" role="alert">Cole uma URL de um anúncio do Mercado Livre para continuar (ex: mercadolivre.com.br/...).</div>
+
+        <div class="input-example">
+          Não tem um link em mãos?
+          <button id="fillExampleBtn">Usar um anúncio de exemplo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="rule-strip">
+        <div class="rule-item"><span class="rule-item__dot"></span>Categoria via breadcrumb da página</div>
+        <div class="rule-item"><span class="rule-item__dot"></span>Analisa os 15 primeiros anúncios da busca</div>
+        <div class="rule-item"><span class="rule-item__dot"></span>Segue as regras de anúncio do Mercado Livre</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 3 — LOADING / ANÁLISE ===================== -->
+  <section class="screen" id="screen-loading">
+    <div class="container loading-wrap">
+      <div class="radar">
+        <div class="radar__ring"></div>
+        <div class="radar__ring"></div>
+        <div class="radar__ring"></div>
+        <div class="radar__sweep"></div>
+        <div class="radar__core">ANALISANDO</div>
+      </div>
+
+      <h2 id="loadingTitle">Analisando a categoria do seu produto…</h2>
+      <p id="loadingSub">Isso leva só alguns segundos.</p>
+
+      <ul class="scan-list" id="scanList">
+        <li class="scan-step" data-step="0"><span class="scan-step__mark">1</span> Lendo o breadcrumb da página para identificar a categoria real</li>
+        <li class="scan-step" data-step="1"><span class="scan-step__mark">2</span> Buscando no Mercado Livre pelas 4 primeiras palavras do título</li>
+        <li class="scan-step" data-step="2"><span class="scan-step__mark">3</span> Coletando os 15 primeiros anúncios do resultado da busca</li>
+        <li class="scan-step" data-step="3"><span class="scan-step__mark">4</span> Calculando as palavras que mais se repetem nos títulos</li>
+        <li class="scan-step" data-step="4"><span class="scan-step__mark">5</span> Aplicando as regras de anúncio do Mercado Livre</li>
+        <li class="scan-step" data-step="5"><span class="scan-step__mark">6</span> Montando título, ficha técnica e imagem de referência</li>
+      </ul>
+
+      <div class="scan-bar-track"><div class="scan-bar-fill" id="scanBarFill"></div></div>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 4 — RESULTADO ===================== -->
+  <section class="screen" id="screen-result">
+    <div class="container">
+      <div class="result-head">
+        <div class="result-head__top">
+          <div>
+            <div class="result-eyebrow">Recomendação pronta</div>
+            <h1 id="resultHeadline">Versão otimizada do seu anúncio</h1>
+            <div class="result-source" id="resultSource"></div>
+          </div>
+          <div class="score-pill">
+            <div class="score-pill__ring" id="scoreRing" style="position:relative;">
+              <span class="score-pill__num" id="scoreRingNum">87</span>
+            </div>
+            <div class="score-pill__text">
+              <span class="score-pill__label">Score de performance</span>
+              <span class="score-pill__value" id="scoreValue">87/100</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+        <!-- Coluna principal -->
+        <div>
+          <div class="panel">
+            <div class="panel__title">Título recomendado <span class="tag">Alto impacto</span></div>
+            <div class="field-row">
+              <div class="field-row__label">
+                <span>Título (até 60 caracteres) · palavras-chave na ordem real de uso</span>
+                <button class="field-row__copy" data-copy-target="titleValue">copiar</button>
+              </div>
+              <div class="field-row__value title-value" id="titleValue">—</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__title">Ficha técnica recomendada</div>
+            <div class="spec-grid" id="specGrid"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__title">Descrição recomendada</div>
+            <div class="field-row">
+              <div class="field-row__label">
+                <span>Descrição</span>
+                <button class="field-row__copy" data-copy-target="descValue">copiar</button>
+              </div>
+              <div class="field-row__value" id="descValue">—</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__title">Palavras-chave mais frequentes na busca</div>
+            <div class="kw-cloud" id="kwCloud"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__title">Imagem de referência <span class="tag">Mais vendido</span></div>
+            <div class="best-seller-block">
+              <div class="best-seller-block__img" id="bestSellerImage"></div>
+              <p class="best-seller-block__caption" id="bestSellerCaption"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna lateral -->
+        <div>
+          <div class="panel">
+            <div class="panel__title">Conformidade com as regras do ML</div>
+            <ul class="checklist">
+              <li>Título sem emojis, sem CAPS LOCK abusivo e dentro do limite de caracteres</li>
+              <li>Sem dados de contato, links externos ou menções a outras plataformas</li>
+              <li>Categoria e ficha técnica compatíveis com o produto anunciado</li>
+              <li>Imagem principal em fundo branco, sem marcas de água ou textos sobrepostos</li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <div class="panel__title">Top 15 resultados da busca</div>
+            <div class="rank-list" id="rankList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-primary" id="restartBtn">Analisar outro anúncio</button>
+        <button class="btn-secondary" id="backToInputBtn">Voltar para a etapa anterior</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var screens = ["screen-intro","screen-input","screen-loading","screen-result"];
+  var progressMap = {0:"4%", 1:"35%", 2:"68%", 3:"100%"};
+
+  function goTo(index){
+    screens.forEach(function(id, i){
+      document.getElementById(id).classList.toggle("active", i === index);
+    });
+    document.getElementById("progressFill").style.width = progressMap[index];
+    window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
+  }
+
+  // ---------- Screen 1: intro / login ----------
+  var emailInput = null;
+  var currentEmail = null;
+
+  document.getElementById("skipLoginBtn").addEventListener("click", function(){ goTo(1); });
+  document.getElementById("guestBtn").addEventListener("click", function(){ goTo(1); });
+
+  // Salvar email do lead
+  document.getElementById("saveEmailBtn").addEventListener("click", function(){
+    var email = document.getElementById("emailInput").value.trim();
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)){
+      alert("Por favor, insira um email válido.");
+      return;
+    }
+    currentEmail = email;
+    localStorage.setItem("userEmail", email);
+    goTo(1);
+  });
+
+  // ============ CONFIG ============
+  // Detecta automaticamente o ambiente:
+  // - Se rodando no localhost: usa mock local
+  // - Se rodando no GitHub Pages (github.io): usa API do Vercel
+  // - Em outro ambiente: usa window.API_BASE se disponível
+  
+  var isLocalDev = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  var isGitHubPages = window.location.hostname.includes("github.io");
+  
+  // API_BASE: URL do backend (sem trailing slash)
+  // Em dev local: http://localhost:3001
+  // Em produção (GitHub Pages): API do Vercel
+  // Você pode alterar a URL do Vercel aqui
+  var API_BASE = isLocalDev ? "http://localhost:3001" : (window.API_BASE || (isGitHubPages ? "https://ml-ads.vercel.app" : ""));
+
+  // Em produção: usa API real do Vercel (não mock)
+// USE_MOCK: true = usa gerador mock local (sem necessidade de backend)
+//           false = chama API real (requer backend configurado e rodando)
+var USE_MOCK = isLocalDev ? true : false;
+
+  // ---------- Screen 2: input de URL ----------
+  var urlInput = document.getElementById("urlInput");
+  var urlError = document.getElementById("urlError");
+  var generateBtn = document.getElementById("generateBtn");
+  var EXAMPLE_URL = "https://www.mercadolivre.com.br/garrafa-termica-inox-1-litro-mantem-temperatura/p/MLB123456789";
+
+  document.getElementById("fillExampleBtn").addEventListener("click", function(){
+    urlInput.value = EXAMPLE_URL;
+    urlInput.focus();
+    urlError.classList.remove("show");
+  });
+
+  function isLikelyMlUrl(value){
+    var v = value.trim().toLowerCase();
+    return v.length > 8 && (v.indexOf("mercadolivre") !== -1 || v.indexOf("mercadolibre") !== -1 || v.indexOf("/p/ml") !== -1);
+  }
+
+  generateBtn.addEventListener("click", function(){
+    var value = urlInput.value.trim();
+    if (!isLikelyMlUrl(value)){
+      urlError.classList.add("show");
+      urlInput.focus();
+      return;
+    }
+    urlError.classList.remove("show");
+    startAnalysis(value);
+  });
+
+  urlInput.addEventListener("keydown", function(e){
+    if (e.key === "Enter") generateBtn.click();
+  });
+
+  // ---------- Captura de email antes da análise ----------
+  var emailInput = null;
+  var currentProductUrl = null;
+
+  function captureEmailAndAnalyze(url){
+    currentProductUrl = url;
+    // Mostra popup de email (inline no card)
+    var btn = document.getElementById("generateBtn");
+    btn.textContent = "Continuar";
+    // O email já está no input do login-card na screen 1, vamos capturar lá
+    // Por ora, vamos usar o mock diretamente
+    startAnalysis(url);
+  }
+
+  // ---------- Mock generator: simula breadcrumb + busca + 15 resultados ----------
+
+  // Pequeno catálogo de categorias reais do ML (3 níveis de breadcrumb) por "família" de produto
+  var CATEGORY_BANK = [
+    {
+      seedWords: ["garrafa","termica","squeeze","copo","caneca"],
+      breadcrumb: ["Casa, Móveis e Decoração","Utensílios de Cozinha","Garrafas e Squeezes"],
+      brands: ["Invicta","Stanley","Termolar","Soprano","Tramontina"],
+      sizes: ["500ml","750ml","1 Litro","1,5 Litro","2 Litros"]
+    },
+    {
+      seedWords: ["liquidificador","mixer","processador","batedeira"],
+      breadcrumb: ["Eletrodomésticos","Pequenos Eletrodomésticos","Liquidificadores e Mixers"],
+      brands: ["Philco","Mondial","Oster","Britânia","Philips Walita"],
+      sizes: ["1,5L","2L","2,5L","3L"]
+    },
+    {
+      seedWords: ["fone","headset","earbud","headphone"],
+      breadcrumb: ["Eletrônicos, Áudio e Vídeo","Áudio Portátil","Fones de Ouvido"],
+      brands: ["JBL","Baseus","Xiaomi","Philips","Motorola"],
+      sizes: ["Único","Com estojo","Com microfone"]
+    },
+    {
+      seedWords: ["tenis","sapato","chuteira","sapatenis"],
+      breadcrumb: ["Calçados, Roupas e Bolsas","Calçados Masculinos","Tênis"],
+      brands: ["Nike","Adidas","Olympikus","Mizuno","Puma"],
+      sizes: ["38","39","40","41","42","43"]
+    },
+    {
+      seedWords: ["mochila","bolsa","mala","necessaire"],
+      breadcrumb: ["Calçados, Roupas e Bolsas","Bolsas, Mochilas e Estojos","Mochilas"],
+      brands: ["Samsonite","Swissland","Up4you","Nike","Adidas"],
+      sizes: ["Pequena","Média","Grande","Extra Grande"]
+    },
+    {
+      seedWords: ["capa","case","pelicula","suporte"],
+      breadcrumb: ["Celulares e Telefones","Acessórios para Celulares","Capas e Películas"],
+      brands: ["Gshield","Spigen","3M","Multilaser","X-One"],
+      sizes: ["iPhone","Samsung","Motorola","Xiaomi","Universal"]
+    },
+    {
+      seedWords: ["luminaria","lampada","abajur","fita"],
+      breadcrumb: ["Casa, Móveis e Decoração","Iluminação","Luminárias"],
+      brands: ["Taschibra","Avant","Philips","Empalux","Elgin"],
+      sizes: ["Pequena","Média","Grande"]
+    },
+    {
+      seedWords: ["tapete","almofada","cortina","jogo"],
+      breadcrumb: ["Casa, Móveis e Decoração","Têxteis para o Lar","Tapetes"],
+      brands: ["Sultan","São Carlos","Casa & Conforto","Niazitex","Buddemeyer"],
+      sizes: ["1,00x1,40m","1,50x2,00m","2,00x2,50m"]
+    }
+  ];
+
+  var STOPWORDS = ["de","da","do","das","dos","com","para","em","e","a","o","os","as","um","uma","no","na","novo","nova","sem","qualquer","clara","claro"];
+
+  function pickCategoryBank(seedText){
+    var lower = seedText.toLowerCase();
+    for (var i = 0; i < CATEGORY_BANK.length; i++){
+      var bank = CATEGORY_BANK[i];
+      for (var j = 0; j < bank.seedWords.length; j++){
+        if (lower.indexOf(bank.seedWords[j]) !== -1) return bank;
+      }
+    }
+    // fallback determinístico baseado no tamanho do texto, evita sempre cair no mesmo
+    return CATEGORY_BANK[seedText.length % CATEGORY_BANK.length];
+  }
+
+  function slugFromUrl(url){
+    var match = url.match(/mercadolivre\.com\.br\/([^\/]+)/i) || url.match(/mercadolibre\.[a-z.]+\/([^\/]+)/i);
+    var raw = match ? match[1] : url.replace(/https?:\/\//,"").split("/")[0];
+    raw = raw.replace(/-/g," ").replace(/\b(mlb|mlc|mla)\b/gi,"").trim();
+    return raw || "produto";
+  }
+
+  function titleCase(str){
+    return str.split(" ").filter(Boolean).map(function(w){
+      if (STOPWORDS.indexOf(w.toLowerCase()) !== -1) return w.toLowerCase();
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join(" ");
+  }
+
+  function seededRandom(seed){
+    // gerador determinístico simples (LCG) a partir de uma seed numérica
+    var s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return function(){
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
+  }
+
+  function strSeed(str){
+    var h = 0;
+    for (var i = 0; i < str.length; i++){ h = (h * 31 + str.charCodeAt(i)) >>> 0; }
+    return h || 1;
+  }
+
+  // Trunca um texto em até maxLen caracteres, sem cortar palavras no meio
+  function truncateWords(text, maxLen){
+    if (text.length <= maxLen) return text;
+    var cut = text.slice(0, maxLen);
+    var lastSpace = cut.lastIndexOf(" ");
+    if (lastSpace > 0) cut = cut.slice(0, lastSpace);
+    return cut.trim();
+  }
+
+  // Monta os 15 títulos de concorrentes simulando a página de resultado de busca do ML
+  function simulateSearchResults(query, bank, rng, primaryBrand){
+    var suffixes = [
+      "Original","Premium","Resistente","Profissional","Compacto","Portátil",
+      "Reforçado","Top","Linha Premium","Edição Especial","Multiuso","Reforçada"
+    ];
+    var extras = [
+      "Envio Rápido","Frete Grátis","Com Garantia","Kit Completo","Promoção",
+      "Pronta Entrega","Á Prova D'água","Alta Durabilidade"
+    ];
+
+    var results = [];
+    for (var i = 0; i < 15; i++){
+      // a marca buscada (primaryBrand) tem mais chance de aparecer, como numa busca real por essa marca
+      var brand = rng() < 0.6 ? primaryBrand : bank.brands[Math.floor(rng() * bank.brands.length)];
+      var size = bank.sizes[Math.floor(rng() * bank.sizes.length)];
+      var suf1 = suffixes[Math.floor(rng() * suffixes.length)];
+      var includeExtra = rng() > 0.35;
+      var extra = extras[Math.floor(rng() * extras.length)];
+
+      var parts = [query, brand, size, suf1];
+      if (includeExtra) parts.push(extra);
+      var title = truncateWords(titleCase(parts.join(" ")), 60);
+
+      var baseSales = 1450 - i * (78 + Math.floor(rng() * 40));
+      var sales = Math.max(35, baseSales);
+
+      results.push({
+        pos: i + 1,
+        title: title,
+        brand: brand,
+        size: size,
+        sales: sales,
+        price: Math.round((35 + rng() * 280) * 100) / 100
+      });
+    }
+    // ordena por vendas desc (maior número de vendas primeiro), como a página real ordenaria por relevância/vendas
+    results.sort(function(a,b){ return b.sales - a.sales; });
+    results.forEach(function(r, idx){ r.pos = idx + 1; });
+    return results;
+  }
+
+  // Extrai as palavras-chave que mais aparecem nos títulos, preservando a ordem
+  // da primeira aparição entre as palavras mais frequentes (replica a ordem real)
+  function extractTopKeywords(titles, maxWords){
+    var freq = {};
+    var firstSeenOrder = [];
+
+    titles.forEach(function(title){
+      var seenInThisTitle = {};
+      title.toLowerCase().split(/\s+/).forEach(function(rawWord){
+        var w = rawWord.replace(/[^a-z0-9áàâãéèêíïóôõöúçñ]/gi, "");
+        if (!w || w.length < 3) return;
+        if (STOPWORDS.indexOf(w) !== -1) return;
+        if (seenInThisTitle[w]) return; // conta 1x por título
+        seenInThisTitle[w] = true;
+        if (freq[w] === undefined){
+          freq[w] = 0;
+          firstSeenOrder.push(w);
+        }
+        freq[w]++;
+      });
+    });
+
+    // ordena por frequência desc; em caso de empate, mantém a ordem de primeira aparição
+    var ranked = firstSeenOrder.slice().sort(function(a,b){
+      if (freq[b] !== freq[a]) return freq[b] - freq[a];
+      return firstSeenOrder.indexOf(a) - firstSeenOrder.indexOf(b);
+    });
+
+    var top = ranked.slice(0, maxWords);
+    // reordena o "top" de volta à ordem de primeira aparição nos títulos (a ordem real, como pedido)
+    top.sort(function(a,b){ return firstSeenOrder.indexOf(a) - firstSeenOrder.indexOf(b); });
+
+    return top.map(function(w){
+      return { word: w, count: freq[w] };
+    });
+  }
+
+  function buildMock(url){
+    var slugRaw = slugFromUrl(url);
+    var words = slugRaw.split(" ").filter(function(w){ return w.length > 1; });
+    var productNameFull = titleCase(words.join(" ")) || "Produto Analisado";
+    var seed = strSeed(slugRaw || url);
+    var rng = seededRandom(seed);
+
+    var bank = pickCategoryBank(slugRaw);
+
+    // título original simulado do anúncio do usuário (Produto + Marca + Modelo + Specs, padrão ML)
+    // tenta detectar uma marca conhecida já mencionada na URL/slug; senão usa fallback determinístico
+    var lowerSlug = slugRaw.toLowerCase();
+    var detectedBrand = null;
+    for (var bi = 0; bi < bank.brands.length; bi++){
+      if (lowerSlug.indexOf(bank.brands[bi].toLowerCase()) !== -1){
+        detectedBrand = bank.brands[bi];
+        break;
+      }
+    }
+    var originalBrand = detectedBrand || bank.brands[seed % bank.brands.length];
+    var originalSize = bank.sizes[seed % bank.sizes.length];
+
+    // remove a marca e stopwords do nome do produto para não repetir/poluir o título
+    var productWordsNoBrand = words.filter(function(w){
+      var lw = w.toLowerCase();
+      if (lw === originalBrand.toLowerCase()) return false;
+      if (STOPWORDS.indexOf(lw) !== -1) return false;
+      return true;
+    });
+    var originalTitle = titleCase((productWordsNoBrand.slice(0,3).join(" ") || "produto") + " " + originalBrand + " " + originalSize);
+
+    // -------- 1) Busca: usa as 4 primeiras palavras do título do anúncio --------
+    var titleWords = originalTitle.split(" ").filter(Boolean);
+    var searchQuery = titleCase(titleWords.slice(0, 4).join(" "));
+
+    // -------- 2) Simula os 15 primeiros resultados dessa busca --------
+    var searchResults = simulateSearchResults(searchQuery, bank, rng, originalBrand);
+    var bestSeller = searchResults[0];
+
+    // -------- 3) Extrai palavras-chave por frequência, na ordem em que aparecem --------
+    var allTitles = searchResults.map(function(r){ return r.title; });
+    var topKeywords = extractTopKeywords(allTitles, 9);
+
+    // título recomendado = sequência das palavras-chave mais frequentes, na ordem real de aparição
+    var recommendedTitle = truncateWords(titleCase(topKeywords.map(function(k){ return k.word; }).join(" ")), 60);
+    if (!recommendedTitle) recommendedTitle = originalTitle;
+
+    var score = 78 + (seed % 18); // 78-95, determinístico
+
+    var desc = "Conheça este " + productNameFull.toLowerCase() + ", com construção reforçada e acabamento premium. " +
+      "Indicado para uso diário, com garantia do vendedor e envio rápido para todo o Brasil. " +
+      "Inclui manual de uso e suporte direto com o vendedor após a compra.";
+
+    // -------- 4) Ficha técnica derivada do anúncio mais vendido da busca --------
+    var spec = {
+      categoria: bank.breadcrumb[bank.breadcrumb.length - 1],
+      marca: bestSeller.brand,
+      modelo: searchQuery.split(" ").slice(-1)[0] + "-" + (1000 + (seed % 900)),
+      tamanho: bestSeller.size,
+      preco: bestSeller.price,
+      descricao: desc
+    };
+
+    return {
+      url: url,
+      productName: productNameFull,
+      breadcrumb: bank.breadcrumb,
+      score: score,
+      searchQuery: searchQuery,
+      searchResults: searchResults,
+      bestSeller: bestSeller,
+      topKeywords: topKeywords,
+      recommendedTitle: recommendedTitle,
+      spec: spec,
+      maxSales: searchResults[0].sales
+    };
+  }
+
+  // ---------- Screen 3: loading sequence ----------
+  var scanSteps = document.querySelectorAll(".scan-step");
+  var scanBarFill = document.getElementById("scanBarFill");
+  var loadingTimers = [];
+
+  function clearLoadingTimers(){
+    loadingTimers.forEach(function(t){ clearTimeout(t); });
+    loadingTimers = [];
+  }
+
+  function runLoadingSequence(onDone){
+    goTo(2);
+    scanSteps.forEach(function(el){ el.classList.remove("active","done"); });
+    scanBarFill.style.width = "0%";
+    clearLoadingTimers();
+
+    var stepDuration = 480;
+    scanSteps.forEach(function(el, i){
+      loadingTimers.push(setTimeout(function(){
+        scanSteps.forEach(function(s){ s.classList.remove("active"); });
+        el.classList.add("active");
+        scanBarFill.style.width = Math.round(((i+1) / scanSteps.length) * 100) + "%";
+      }, i * stepDuration));
+    });
+
+    loadingTimers.push(setTimeout(function(){
+      scanSteps.forEach(function(s){ s.classList.remove("active"); s.classList.add("done"); });
+    }, scanSteps.length * stepDuration + 150));
+
+    loadingTimers.push(setTimeout(function(){
+      onDone();
+    }, scanSteps.length * stepDuration + 650));
+  }
+
+  // ---------- Chamada real à API ----------
+  function fetchFromApi(url, onSuccess, onError){
+    if (USE_MOCK){
+      // Mock mode: usa buildMock (código original)
+      setTimeout(function(){
+        onSuccess(buildMock(url));
+      }, 1500);
+      return;
+    }
+
+    // Modo real: chama API
+    var apiUrl = API_BASE + "/api/analyze?url=" + encodeURIComponent(url);
+    
+    fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(json){
+      if (json.ok){
+        // Converte formato da API para formato esperado pelo render
+        var data = convertApiResponse(json.data);
+        onSuccess(data);
+      } else {
+        onError(json.error || "Erro na API");
+      }
+    })
+    .catch(function(err){
+      onError(err.message);
+    });
+  }
+
+  // Converte resposta da API para formato do frontend
+  function convertApiResponse(apiData){
+    return {
+      url: apiData.url,
+      productName: apiData.product_name,
+      breadcrumb: apiData.breadcrumb || [],
+      score: apiData.score,
+      searchQuery: apiData.search_query,
+      searchResults: apiData.search_results || [],
+      bestSeller: apiData.best_seller || {},
+      topKeywords: apiData.top_keywords || [],
+      recommendedTitle: apiData.recommended_title,
+      spec: apiData.spec || {},
+      maxSales: apiData.max_sales || 0
+    };
+  }
+
+  function startAnalysis(url){
+    // Salvar email antes de analisar (se disponível)
+    var email = localStorage.getItem("userEmail") || null;
+    if (email && API_BASE && !USE_MOCK){
+      fetch(API_BASE + "/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email,
+          url: url,
+          product_title: null
+        })
+      }).catch(function(){});
+    }
+
+    fetchFromApi(url, function(data){
+      runLoadingSequence(function(){
+        renderResult(data);
+        goTo(3);
+      });
+    }, function(err){
+      console.error("API error:", err);
+      // Fallback para mock em caso de erro
+      runLoadingSequence(function(){
+        renderResult(buildMock(url));
+        goTo(3);
+      });
+    });
+  }
+
+  // ---------- Screen 4: render do resultado ----------
+  function renderResult(data){
+    document.getElementById("resultHeadline").textContent = "Versão otimizada: " + data.productName;
+    document.getElementById("resultSource").innerHTML =
+      'Categoria via breadcrumb: <strong>' + data.breadcrumb.join(" › ") + '</strong>' +
+      ' &nbsp;·&nbsp; Busca usada na análise: <strong>"' + data.searchQuery + '"</strong>';
+
+    document.getElementById("titleValue").textContent = data.recommendedTitle;
+    document.getElementById("descValue").textContent = data.spec.descricao;
+
+    document.getElementById("scoreValue").textContent = data.score + "/100";
+    document.getElementById("scoreRingNum").textContent = data.score;
+    document.getElementById("scoreRing").style.setProperty("--score", data.score);
+
+    // Ficha técnica
+    var specGrid = document.getElementById("specGrid");
+    specGrid.innerHTML = "";
+    var specItems = [
+      { label: "Categoria", value: data.spec.categoria },
+      { label: "Marca", value: data.spec.marca },
+      { label: "Modelo", value: data.spec.modelo },
+      { label: "Tamanho", value: data.spec.tamanho },
+      { label: "Preço sugerido", value: "R$ " + data.spec.preco.toLocaleString("pt-BR", {minimumFractionDigits:2}) }
+    ];
+    specItems.forEach(function(item){
+      var row = document.createElement("div");
+      row.className = "spec-item";
+      row.innerHTML = '<span class="spec-item__label">' + item.label + '</span>' +
+                       '<span class="spec-item__value">' + item.value + '</span>';
+      specGrid.appendChild(row);
+    });
+
+    // Palavras-chave (na ordem real extraída dos títulos, mais frequentes primeiro destacadas)
+    var kwCloud = document.getElementById("kwCloud");
+    kwCloud.innerHTML = "";
+    data.topKeywords.forEach(function(kw, idx){
+      var span = document.createElement("span");
+      span.className = "kw-chip" + (idx < 4 ? "" : " secondary");
+      span.textContent = kw.word + " (" + kw.count + "x)";
+      kwCloud.appendChild(span);
+    });
+
+    // Imagem principal do anúncio mais vendido encontrado na busca
+    var bestImgWrap = document.getElementById("bestSellerImage");
+    bestImgWrap.innerHTML = buildProductIllustration(data.bestSeller, data.searchQuery);
+    document.getElementById("bestSellerCaption").innerHTML =
+      'Imagem principal de referência — anúncio mais vendido encontrado para <strong>"' + data.searchQuery + '"</strong>: ' +
+      '<strong>' + data.bestSeller.title + '</strong> (' + data.bestSeller.sales.toLocaleString("pt-BR") + ' vendas/mês)';
+
+    // Ranking dos 15 resultados de busca
+    var rankList = document.getElementById("rankList");
+    rankList.innerHTML = "";
+    data.searchResults.forEach(function(r){
+      var pct = Math.max(6, Math.round((r.sales / data.maxSales) * 100));
+      var isBest = r.pos === 1;
+      var row = document.createElement("div");
+      row.className = "rank-row" + (isBest ? " is-target" : "");
+      row.innerHTML =
+        '<span class="rank-pos">' + String(r.pos).padStart(2,"0") + '</span>' +
+        '<span>' +
+          '<div style="margin-bottom:4px;">' + r.title + (isBest ? ' <span class="tag" style="margin-left:6px;">Mais vendido</span>' : '') + '</div>' +
+          '<div class="rank-bar-track"><div class="rank-bar-fill" style="width:' + pct + '%;"></div></div>' +
+        '</span>' +
+        '<span class="rank-sales">' + r.sales.toLocaleString("pt-BR") + ' vendas/mês</span>';
+      rankList.appendChild(row);
+    });
+  }
+
+  // Gera uma ilustração SVG simples representando a "foto principal" do produto mais vendido
+  function buildProductIllustration(bestSeller, query){
+    var seed = strSeed(bestSeller.title);
+    var hue = seed % 360;
+    var initials = (query || "P").trim().charAt(0).toUpperCase();
+    return '' +
+      '<svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Imagem principal do anúncio mais vendido">' +
+        '<defs>' +
+          '<linearGradient id="bsGrad" x1="0" y1="0" x2="1" y2="1">' +
+            '<stop offset="0%" stop-color="hsl(' + hue + ',70%,88%)"/>' +
+            '<stop offset="100%" stop-color="hsl(' + hue + ',55%,72%)"/>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<rect x="0" y="0" width="320" height="320" rx="22" fill="#FFFFFF"/>' +
+        '<rect x="14" y="14" width="292" height="292" rx="16" fill="url(#bsGrad)"/>' +
+        '<rect x="90" y="110" width="140" height="110" rx="14" fill="#FFFFFF" opacity="0.92"/>' +
+        '<rect x="90" y="110" width="140" height="28" rx="14" fill="hsl(' + hue + ',60%,45%)" opacity="0.85"/>' +
+        '<circle cx="160" cy="165" r="26" fill="hsl(' + hue + ',60%,40%)" opacity="0.18"/>' +
+        '<text x="160" y="174" font-family="Space Grotesk, sans-serif" font-size="26" font-weight="700" fill="hsl(' + hue + ',55%,32%)" text-anchor="middle">' + initials + '</text>' +
+        '<rect x="108" y="206" width="104" height="8" rx="4" fill="hsl(' + hue + ',45%,55%)" opacity="0.55"/>' +
+      '</svg>';
+  }
+
+  // ---------- Copiar campos ----------
+  document.querySelectorAll(".field-row__copy").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var targetId = btn.getAttribute("data-copy-target");
+      var text = document.getElementById(targetId).textContent;
+      if (navigator.clipboard && text && text !== "—"){
+        navigator.clipboard.writeText(text).then(function(){
+          var original = btn.textContent;
+          btn.textContent = "copiado!";
+          setTimeout(function(){ btn.textContent = original; }, 1400);
+        });
+      }
+    });
+  });
+
+  // ---------- Navegação final ----------
+  document.getElementById("restartBtn").addEventListener("click", function(){
+    urlInput.value = "";
+    urlError.classList.remove("show");
+    goTo(1);
+  });
+  document.getElementById("backToInputBtn").addEventListener("click", function(){
+    goTo(1);
+  });
+
+})();
+</script>
+
+</body>
+</html>
