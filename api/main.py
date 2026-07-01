@@ -71,60 +71,80 @@ def call_apify_actor(query, max_items=15):
 
 
 def fallback_search(query, limit=15):
-    """Fallback: busca local simulada com dados realistas baseados em categorias REAIS do ML"""
+    """Fallback: busca local simulada com dados realistas baseados na query"""
+
+    # Detecta categoria baseada na query extraída da URL (dinâmico)
+    query_lower = query.lower()
     
-    # Categorias detalhadas do ML com dados realistas
+    # Mapeamentodinâmico de palavras-chave para dados por categoria
     categories = {
-        "garrafa": {
-            "breadcrumb": ["Casa, Móveis e Decoração", "Utensílios de Cozinha", "Garrafas e Squeezes"],
-            "brands": ["Invicta", "Stanley", "Termolar", "Soprano", "Tramontina", "Hidrolight", "Camelbak"],
-            "sizes": ["500ml", "750ml", "1 Litro", "1,5 Litro", "2 Litros"],
-            "models": ["Premium", "Classic", "Sport", "Ultra", "Pro"]
-        },
-        "liquidificador": {
-            "breadcrumb": ["Eletrodomésticos", "Pequenos Eletrodomésticos", "Liquidificadores"],
-            "brands": ["Philco", "Mondial", "Oster", "Britânia", "Philips Walita", "Arno"],
-            "sizes": ["1,5L", "2L", "2,5L", "3L"],
-            "models": ["Power", "Pro", "Turbo", "Ultra", "Max"]
-        },
-        "fone": {
-            "breadcrumb": ["Eletrônicos, Áudio e Vídeo", "Áudio Portátil", "Fones de Ouvido"],
-            "brands": ["JBL", "Baseus", "Xiaomi", "Philips", "Motorola", "Samsung"],
-            "sizes": ["Intra-auricular", "Over-ear", "True Wireless"],
-            "models": ["Pro", "Lite", "Elite", "Ultra", "Sport"]
+        "sapato": {
+            "breadcrumb": ["Calçados, Roupas e Bolsas", "Calçados Femininos", "Sapatos Femininos"],
+            "brands": ["Vizzano", "Moleca", "Act", "Arezzo", "Boticário", "Santa Lolla"],
+            "sizes": ["33", "34", "35", "36", "37", "38", "39", "40"],
+            "models": ["Sandália", "Scarpin", "Slipper", "Coturno", "Mule", "Flat"]
         },
         "tenis": {
             "breadcrumb": ["Calçados, Roupas e Bolsas", "Calçados Masculinos", "Tênis"],
             "brands": ["Nike", "Adidas", "Olympikus", "Mizuno", "Puma", "Kappa"],
             "sizes": ["38", "39", "40", "41", "42", "43", "44"],
-            "models": ["Running", "Casual", "Sport", "Urban", "Professional"]
+            "models": ["Running", "Casual", "Society", "Skate", " Trekking", "Fitness"]
+        },
+        "bolsa": {
+            "breadcrumb": ["Calçados, Roupas e Bolsas", "Bolsas", "Bolsas Femininas"],
+            "brands": ["Santa Lolla", "Arezzo", "Vizzano", "Moleca", "Kipling", "Coach"],
+            "sizes": ["PP", "P", "M", "G"],
+            "models": ["Tote", "Transversal", "Bucket", "Clutch", "Mochila"]
         },
         "mochila": {
             "breadcrumb": ["Calçados, Roupas e Bolsas", "Bolsas, Mochilas e Estojos", "Mochilas"],
-            "brands": ["Samsonite", "Swissland", "Up4you", "Nike", "Adidas", "Puma"],
-            "sizes": ["Pequena", "Média", "Grande", "Extra Grande"],
-            "models": ["Executive", "Urban", "Travel", "Student", "Premium"]
-        },
-        "notebook": {
-            "breadcrumb": ["Informática", "Notebooks", "Notebooks"],
-            "brands": ["Dell", "Lenovo", "Samsung", "Acer", "Asus", "Apple"],
-            "sizes": ["14 Polegadas", "15,6 Polegadas", "16 Polegadas", "17,3 Polegadas"],
-            "models": ["Pro", "Ultra", "Gamer", "Office", "Premium"]
+            "brands": ["Samsonite", "Swissland", "Nike", "Adidas", "Puma", "Kipling"],
+            "sizes": ["PP", "P", "M", "G"],
+            "models": ["Executive", "Student", "Travel", "Urban", "Social"]
         },
         "celular": {
-            "breadcrumb": ["Celulares e Telefones", "Smartphones", "Smartphones"],
+            "breadcrumb": ["Celulares e Telefones", "Smartphones", "Acessórios"],
             "brands": ["Samsung", "Apple", "Xiaomi", "Motorola", "Realme", "POCO"],
             "sizes": ["64GB", "128GB", "256GB", "512GB"],
             "models": ["Pro", "Ultra", "Plus", "Lite", "5G"]
+        },
+        "fone": {
+            "breadcrumb": ["Eletrônicos, Áudio e Vídeo", "Áudio Portátil", "Fones de Ouvido"],
+            "brands": ["JBL", "Baseus", "Xiaomi", "Philips", "Motorola", "Samsung"],
+            "sizes": ["Intra-auricular", "Over-ear", "True Wireless"],
+            "models": ["Pro", "Lite", "Elite", "Sport", "Gamer"]
+        },
+        "garrafa": {
+            "breadcrumb": ["Casa, Móveis e Decoração", "Utensílios de Cozinha", "Garrafas"],
+            "brands": ["Invicta", "Stanley", "Termolar", "Soprano", "Tramontina", "Camelbak"],
+            "sizes": ["500ml", "750ml", "1L", "1,5L", "2L"],
+            "models": ["Premium", "Classic", "Sport", "Ultra", "Pro"]
+        },
+        "liquidificador": {
+            "breadcrumb": ["Eletrodomésticos", "Pequenos Eletrodomésticos", "Liquidificadores"],
+            "brands": ["Philco", "mondial", "Oster", "Britânia", "Philips Walita", "Arno"],
+            "sizes": ["1,5L", "2L", "2,5L", "3L"],
+            "models": ["Power", "Turbo", "Pro", "Ultra", "Max"]
+        },
+        "notebook": {
+            "breadcrumb": ["Informática", "Notebooks", "Acessórios"],
+            "brands": ["Dell", "Lenovo", "Samsung", "Acer", "Asus", "Apple"],
+            "sizes": ["14\"", "15,6\"", "16\"", "17,3\""],
+            "models": ["Pro", "Ultra", "Gamer", "Office", "Premium"]
+        },
+        "default": {
+            "breadcrumb": ["Categoria", "Subcategoria", "Produto"],
+            "brands": ["Marca A", "Marca B", "Marca C", "Marca D", "Marca E"],
+            "sizes": ["P", "M", "G"],
+            "models": ["Premium", "Classic", "Sport", "Ultra"]
         }
+    }
     }
     
     # Detecta categoria baseada na query
-    query_lower = query.lower()
-    cat = categories["garrafa"]  # default
-    
+    cat = categories["default"]
     for key in categories:
-        if key in query_lower:
+        if key != "default" and key in query_lower:
             cat = categories[key]
             break
     
